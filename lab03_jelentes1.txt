@@ -1,0 +1,56 @@
+feladat_01: 
+1.) Hanyszor jelenik meg a printf ,ha a fork() ele rakjuk?
+-Csak egyszer, mert ott meg csak egy folyamat letezik.
+
+2.)Mi tortenik ha utana rakjuk?
+-ketszer jelenik meg, mert a fork() utan mar ket kulon folyamat hajtja verge ugyanazt a kodot.
+
+3.) miert keveredhet a kimenet?
+- mert az op.rendszer utemezoje donti el,eppen melyik folyamat kap lehetoseget a futasra es minden inditasnal valtozhat.
+
+
+feladat_02:
+1.)Mi tortenik ha a szulo hamarabb kilep,mint a gyerek?
+-A gyermek folyamat "arva" lesz.
+-Ilyenkor az op.rendszer nem hagyja magara a folyamatot, hanem a PID 1-es azonositoju folyamat automatikusan "adoptalja" , azaz az uj szuloje lesz. 
+-Ez biztositja hogy a folyamat lefutasa utan valaki letudja kerdezni az exit statuszat.
+
+2.)Miert fontos a wait() egy hosszu ideig futo szerverben?
+-Az eroforrasok felszabaditasa es a folyamattabla betelesenek megelozese miatt.
+-Amikor a gyerek folyamat befejezodik, de a szulo nem hivja meg a wait()-et a gyerek befejezese ott marad a rendszer folyamattablajan "zombi" (<defunct>) allapotban. 
+-Ha a szerver sok gyereket indit, es sosem takarit utanuk, a zombik szama eleri a rendszer maximumat, es a gep nem tud tobbe uj folyamatot(pl. egy uj terminal) inditani.
+
+feladat_03:
+1.) Miert nem pontosan 200 000 eredmeny?
+-mert a counter++ muvelet nem atomi
+-ez a muvelet valojaban harom kulonallo gepi utasitasbol all: az
+ertek kiolvasasa a memoriabol, a noveles a processzorban , majd az uj ertek visszairasa.
+
+2.)Mi lenne a megoldas?
+-valamilyen szinkronizacios mechanizmus ,pl: szemaforok 
+-ez biztositsa hogy egyszerre csak egy folyamat(vagy szal) lephessen a kritikus szakaszba 
+
+3.)Mi tortenne, ha csak 10x novelnenk a countert?Es 1 000 000-szor?
+-10x novelnenk a countert az eredmeny valoszinuleg mindig pontos lenne.Ennyi noveles olyan elkepesztoen gyorsan fut, hogy szinte semmi esely hogy a CPU pont a muvelet kozben valtson at masik folyamatra.
+-1.000.000x ,az eredmeny szinte biztosan hibas,azaz kisebb lenne.Minel tobb ideig tart a ciklus,annal tobbszor fogja az op.rendszer megszakitani a folyamatokat --> igy tobb lehetoseg van hogy ket folyamat egyszerre probalja irni a kozos memoriat.
+
+
+
+feladat_04:
+1.) Mi tortenne ha elfelejtuk a sem_post()-ot?
+-A folyamat,amikor eloszor belep,bezarja a kaput,de sosem nyitja ki.
+-A masik folyamat orokke varni fog a sem_wait()-nel -- ez a deadlock
+
+2.) Miert kell szemafort is a shared memory-ban?
+-ha sima valtozonkent hoznank letre, a fork() utan mindket folyamatnak sajat,kulon bejaratu szemaforja lenne.
+-mintha ket kulon szobaba lennenek: hiaba zarja be az egyik sajat ajtajat, az nem allitana meg a masikat.
+
+3.) Mennyivel lassabb lett a program a szinkronizacio miatt?
+-a szemafor hasznalata sokkal lassabb,mert minden egyes noveles a folyamatnak "engedelyt kell kernie" az op.rendszertol.
+
+Hazi feladat
+Igazold hogy ping pong valtakozas helyes:
+-A szulo es a gyerek folyamat szigoru valtakozasat ket POSIX szemaforral(sem_parent,
+sem_child)A szulo 1-es kezdoertekkel indult, a gyerek 0-val,igy garantalt a PING kerdes.
+A kimeneten latszik hogy a folyamatok nem "beszelnek egymasra", minden PING-et pontosan 
+egy PONG kovet.
